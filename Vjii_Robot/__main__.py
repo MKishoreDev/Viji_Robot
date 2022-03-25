@@ -4,7 +4,6 @@ import json
 import importlib
 import time
 import re
-import random
 import sys
 import traceback
 import Vjii_Robot.modules.sql.users_sql as sql
@@ -28,8 +27,8 @@ from Vjii_Robot import (
     StartTime,
     telethn,
     updater,
-    pbot,
-)
+    pbot
+    )
 
 # needed to dynamically load modules
 # NOTE: Module order is not guaranteed, specify that in the config file!
@@ -60,8 +59,7 @@ from telegram.ext.dispatcher import DispatcherHandlerStop, run_async
 from telegram.utils.helpers import escape_markdown
 from pyrogram import Client, idle
 from telethon import Button, events
-
-
+    
 def get_readable_time(seconds: int) -> str:
     count = 0
     ping_time = ""
@@ -86,30 +84,21 @@ def get_readable_time(seconds: int) -> str:
 
     return ping_time
 
+BOT_NAME = "Vjii_Robot"
+BOT_USERNAME = "Vjii_Robot"
+HELP_IMG = "https://telegra.ph/file/42d08a20f86c5fed1b52e.jpg"
+GROUP_START_IMG = "https://telegra.ph/file/3ed37a900bfc00ded1d55.mp4"
 
 HELP_MSG = "Click the button below to get help manu in your pm."
-HELP_IMG = "https://telegra.ph/file/0e068ad51a1bc71af430f.jpg"
 START_MSG = "I'm awake already!\n<b>Haven't slept since:</b> <code>{}</code>"
-GROUP_START_IMG = "https://telegra.ph/file/92b70f0b4b560890f5654.jpg"
-GORGEOUS = (
-    "https://telegra.ph/file/9a499fc535e1b33d9bdab.jpg",
-    "https://telegra.ph/file/c915b17643f6036c5109f.jpg",
-    "https://telegra.ph/file/3a9a5b3bbb8f3bc4ed3a6.jpg",
-    "https://telegra.ph/file/9143e55d0dc9d27d587fc.jpg",
-    "https://telegra.ph/file/91fa0e6a6d867db2b01e4.jpg",
-    "https://telegra.ph/file/d1c75a77e47ca4f1b857f.jpg",
-    "https://telegra.ph/file/7f4be5164d1998d557f12.jpg",
-    "https://telegra.ph/file/c790dc66e457626c7ba99.jpg",
-    "https://telegra.ph/file/f2939e5088ffc850f57e7.jpg",
-    "https://telegra.ph/file/12e2ea4b32664fcdbae6d.jpg",
-)
+    
 PM_START_TEXT = """
-────「 [{}](https://telegra.ph/file/7efccb63696f8f9b627e8.jpg) 」────
-*Hoi! {},*
-*I Am An Anime Themed Advance And Gorgeous Group Management Bot With A Lot Of Gorgeous Features.*
+────「 [{}](https://telegra.ph/file/0d01d1afdf92996183cad.jpg) 」────
+*Hola! {},*
+*I am an Anime themed advance group management bot with a lot of Sexy Features.*
 ➖➖➖➖➖➖➖➖➖➖➖➖➖
-➢ *Uptime:* `{}`
-➢ `{}` *users, across* `{}` *chats.*
+• *Uptime:* `{}`
+• `{}` *users, across* `{}` *chats.*
 ➖➖➖➖➖➖➖➖➖➖➖➖➖
 ➛ Try The Help Buttons Below To Know My Abilities ××
 """
@@ -121,31 +110,34 @@ Haven't slept since: {}
 
 buttons = [
     [
-        InlineKeyboardButton(
-            text=f"Add Gorgeous Robot To Your Group",
-            url=f"t.me/Vjii_Robot?startgroup=true",
-        )
-    ],
-    [
-        InlineKeyboardButton(text="[► Help ◄]", callback_data="help_back"),
-        InlineKeyboardButton(text="❔ Chit Chat", url="https://t.me/Vjii_world"),
-        InlineKeyboardButton(text="[► Inline ◄]", switch_inline_query_current_chat=""),
-    ],
-    [
-        InlineKeyboardButton(text="🚑 Support", url=f"https://t.me/{SUPPORT_CHAT}"),
-        InlineKeyboardButton(text="📢 Updates", url="https://telegram.me/Vjii_world"),
-    ],
-]
+                        InlineKeyboardButton(
+                            text=f"Add {BOT_NAME} To Your Group",
+                            url=f"t.me/{BOT_USERNAME}?startgroup=true")
+                    ],
+                   [
+                       InlineKeyboardButton(text="[► Help ◄]", callback_data="help_back"),
+                       InlineKeyboardButton(text="❔ Chit Chat", url="https://t.me/HindiKDrama"),
+                       InlineKeyboardButton(text="[► Inline ◄]", switch_inline_query_current_chat=""),
+                     ],
+                    [                  
+                       InlineKeyboardButton(
+                             text="🚑 Support",
+                             url=f"https://t.me/{SUPPORT_CHAT}"),
+                       InlineKeyboardButton(
+                             text="📢 Updates",
+                             url="https://t.me/mr_vjii_king")
+                     ], 
+    ]
 
-
+                    
 HELP_STRINGS = """
 *Main* commands available:
- ➢ /help: PM's you this message.
- ➢ /help <module name>: PM's you info about that module.
- ➢ /donate: information on how to donate!
- ➢ /settings:
-   ➢ in PM: will send you your settings for all supported modules.
-   ➢ in a group: will redirect you to pm, with all that chat's settings.
+ ➛ /help: PM's you this message.
+ ➛ /help <module name>: PM's you info about that module.
+ ➛ /donate: information on how to donate!
+ ➛ /settings:
+   ❂ in PM: will send you your settings for all supported modules.
+   ❂ in a group: will redirect you to pm, with all that chat's settings.
 """
 
 DONATE_STRING = """❂ I'm Free for Everyone ❂"""
@@ -232,13 +224,7 @@ def start(update: Update, context: CallbackContext):
                     update.effective_chat.id,
                     HELPABLE[mod].__help__,
                     InlineKeyboardMarkup(
-                        [
-                            [
-                                InlineKeyboardButton(
-                                    text="[► Back ◄]", callback_data="help_back"
-                                )
-                            ]
-                        ]
+                        [[InlineKeyboardButton(text="[► Back ◄]", callback_data="help_back")]]
                     ),
                 )
 
@@ -262,16 +248,14 @@ def start(update: Update, context: CallbackContext):
                     escape_markdown(first_name),
                     escape_markdown(uptime),
                     sql.num_users(),
-                    sql.num_chats(),
-                ),
+                    sql.num_chats()),                        
                 reply_markup=InlineKeyboardMarkup(buttons),
                 parse_mode=ParseMode.MARKDOWN,
                 timeout=60,
             )
     else:
-        update.effective_message.reply_photo(
-            GROUP_START_IMG,
-            caption="<b>Yes, Darling I'm alive!\nHaven't sleep since</b>: <code>{}</code>".format(
+        update.effective_message.reply_animation(
+            GROUP_START_IMG, caption= "<b>Yes, Darling I'm alive!\nHaven't sleep since</b>: <code>{}</code>".format(
                 uptime
             ),
             parse_mode=ParseMode.HTML,
@@ -284,13 +268,12 @@ def start(update: Update, context: CallbackContext):
                         ),
                         InlineKeyboardButton(
                             text="📢 Updates",
-                            url="https://telegram.dog/Vjii_world",
+                            url="https://telegram.dog/mr_vjii_king",
                         ),
                     ]
                 ]
             ),
         )
-
 
 def error_handler(update, context):
     """Log the error and send a telegram message to notify the developer."""
@@ -360,7 +343,9 @@ def help_button(update, context):
         if mod_match:
             module = mod_match.group(1)
             text = (
-                "╒═══「 *{}* module: 」\n".format(HELPABLE[module].__mod_name__)
+                "╒═══「 *{}* module: 」\n".format(
+                    HELPABLE[module].__mod_name__
+                )
                 + HELPABLE[module].__help__
             )
             query.message.edit_text(
@@ -368,13 +353,7 @@ def help_button(update, context):
                 parse_mode=ParseMode.MARKDOWN,
                 disable_web_page_preview=True,
                 reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                text="[► Back ◄]", callback_data="help_back"
-                            )
-                        ]
-                    ]
+                    [[InlineKeyboardButton(text="[► Back ◄]", callback_data="help_back")]]
                 ),
             )
 
@@ -414,39 +393,35 @@ def help_button(update, context):
     except BadRequest:
         pass
 
-
-def gorgeous_callback_data(update, context):
+def charm_callback_data(update, context):
     query = update.callback_query
     uptime = get_readable_time((time.time() - StartTime))
-    if query.data == "gorgeous_":
+    if query.data == "charm_":
         query.message.edit_text(
             text="""CallBackQueriesData Here""",
             parse_mode=ParseMode.MARKDOWN,
             disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [
-                        InlineKeyboardButton(
-                            text="[► Back ◄]", callback_data="gorgeous_back"
-                        )
-                    ]
+                 [
+                    InlineKeyboardButton(text="[► Back ◄]", callback_data="charm_back")
+                 ]
                 ]
             ),
         )
-    elif query.data == "gorgeous_back":
+    elif query.data == "charm_back":
         first_name = update.effective_user.first_name
         query.message.edit_text(
-            PM_START_TEXT.format(
-                escape_markdown(context.bot.first_name),
-                escape_markdown(first_name),
-                escape_markdown(uptime),
-                sql.num_users(),
-                sql.num_chats(),
-            ),
-            reply_markup=InlineKeyboardMarkup(buttons),
-            parse_mode=ParseMode.MARKDOWN,
-            timeout=60,
-            disable_web_page_preview=False,
+                PM_START_TEXT.format(
+                    escape_markdown(context.bot.first_name),
+                    escape_markdown(first_name),
+                    escape_markdown(uptime),
+                    sql.num_users(),
+                    sql.num_chats()),
+                reply_markup=InlineKeyboardMarkup(buttons),
+                parse_mode=ParseMode.MARKDOWN,
+                timeout=60,
+                disable_web_page_preview=False,
         )
 
 
@@ -459,8 +434,7 @@ def get_help(update, context):
     if chat.type != chat.PRIVATE:
 
         update.effective_message.reply_photo(
-            HELP_IMG,
-            HELP_MSG,
+            HELP_IMG, HELP_MSG,
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -477,7 +451,9 @@ def get_help(update, context):
     if len(args) >= 2 and any(args[1].lower() == x for x in HELPABLE):
         module = args[1].lower()
         text = (
-            " 〔 *{}* 〕\n".format(HELPABLE[module].__mod_name__)
+            " 〔 *{}* 〕\n".format(
+                HELPABLE[module].__mod_name__
+            )
             + HELPABLE[module].__help__
         )
         send_help(
@@ -490,6 +466,7 @@ def get_help(update, context):
 
     else:
         send_help(chat.id, HELP_STRINGS)
+
 
 
 def send_settings(chat_id, user_id, user=False):
@@ -699,55 +676,20 @@ def migrate_chats(update: Update, context: CallbackContext):
 
     LOGGER.info("Successfully migrated!")
     raise DispatcherHandlerStop
-
-
+    
 def main():
-
-    if SUPPORT_CHAT is not None and isinstance(SUPPORT_CHAT, str):
-        try:
-            dispatcher.bot.send_photo(
-                "@Vjii_world",
-                random.choice(GORGEOUS),
-                caption="**Gorgeous Has been Started! Working Fine For Status, Click /start And /help For More Info.**",
-                parse_mode=ParseMode.MARKDOWN,
-                reply_markup=InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                text="[► Summon Me ◄]",
-                                url=f"https://t.me/Vjii_Robot?startgroup=true",
-                            )
-                        ]
-                    ]
-                ),
-            )
-        except Unauthorized:
-            LOGGER.warning(
-                "Bot isnt able to send message to support_chat, go and check!"
-            )
-        except BadRequest as e:
-            LOGGER.warning(e.message)
-
     test_handler = DisableAbleCommandHandler("test", test, run_async=True)
     start_handler = DisableAbleCommandHandler("start", start, run_async=True)
 
     help_handler = DisableAbleCommandHandler("help", get_help, run_async=True)
-    help_callback_handler = CallbackQueryHandler(
-        help_button, pattern=r"help_.*", run_async=True
-    )
+    help_callback_handler = CallbackQueryHandler(help_button, pattern=r"help_.*", run_async=True)
 
     settings_handler = DisableAbleCommandHandler("settings", get_settings)
-    settings_callback_handler = CallbackQueryHandler(
-        settings_button, pattern=r"stngs_", run_async=True
-    )
+    settings_callback_handler = CallbackQueryHandler(settings_button, pattern=r"stngs_", run_async=True)
 
-    data_callback_handler = CallbackQueryHandler(
-        gorgeous_callback_data, pattern=r"gorgeous_", run_async=True
-    )
+    data_callback_handler = CallbackQueryHandler(charm_callback_data, pattern=r"charm_", run_async=True)
     donate_handler = DisableAbleCommandHandler("donate", donate, run_async=True)
-    migrate_handler = MessageHandler(
-        Filters.status_update.migrate, migrate_chats, run_async=True
-    )
+    migrate_handler = MessageHandler(Filters.status_update.migrate, migrate_chats, run_async=True)
 
     # dispatcher.add_handler(test_handler)
     dispatcher.add_handler(start_handler)
@@ -771,15 +713,8 @@ def main():
             updater.bot.set_webhook(url=URL + TOKEN)
 
     else:
-        LOGGER.info(
-            f"Gorgeous started, Using long polling. | BOT: [@{dispatcher.bot.username}]"
-        )
-        updater.start_polling(
-            timeout=15,
-            read_latency=4,
-            drop_pending_updates=True,
-            allowed_updates=Update.ALL_TYPES,
-        )
+        LOGGER.info(f"Vjii started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
+        updater.start_polling(timeout=15, read_latency=4, drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
 
     if len(argv) not in (1, 3, 4):
         telethn.disconnect()
@@ -788,8 +723,7 @@ def main():
 
     updater.idle()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     LOGGER.info("Successfully loaded modules: " + str(ALL_MODULES))
     telethn.start(bot_token=TOKEN)
     pbot.start()
