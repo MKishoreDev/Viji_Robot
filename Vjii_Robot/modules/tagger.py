@@ -1,294 +1,109 @@
-from telegram import ParseMode
-from telegram.error import BadRequest
-from telegram.utils.helpers import mention_html
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import run_async, Filters, CommandHandler, CallbackQueryHandler
-
-from Vjii_Robot import dispatcher, REDIS
-from Vjii_Robot.modules.disable import DisableAbleCommandHandler
-from Vjii_Robot.modules.helper_funcs.chat_status import bot_admin, user_admin
-from Vjii_Robot.modules.helper_funcs.extraction import extract_user_and_text
-from Vjii_Robot.modules.helper_funcs.alternate import typing_action
+import os
+import asyncio
+from telethon import Button
+from telethon import TelegramClient, events
+from telethon.tl.types import ChannelParticipantAdmin
+from telethon.tl.types import ChannelParticipantCreator
+from telethon.tl.functions.channels import GetParticipantRequest
+from telethon.errors import UserNotParticipantError
+from Vjii_Robot import telethn as client
 
 
-@bot_admin
-@user_admin
-@typing_action
-def addtag(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    args = context.args
-    user_id, reason = extract_user_and_text(message, args)
-    if not user_id:
-        message.reply_text("You don't seem to be referring to a user.")
-        return
-    try:
-        member = chat.get_member(user_id)
-    except BadRequest as excp:
-        if excp.message == "User not found":
-            message.reply_text("I can't seem to find this user")
-            return
-        raise
-    if user_id == context.bot.id:
-        message.reply_text("how I supposed to tag myself")
-        return
+spam_chats = []
 
-    chat_id = str(chat.id)[1:]
-    tagall_list = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    match_user = mention_html(member.user.id, member.user.first_name)
-    if match_user in tagall_list:
-        message.reply_text(
-            "{} already exist in {}'s tag list.".format(
-                mention_html(member.user.id, member.user.first_name), chat.title
-            ),
-            parse_mode=ParseMode.HTML,
+@client.on(events.NewMessage(pattern="^/tagall ?(.*)"))
+@client.on(events.NewMessage(pattern="^@all ?(.*)"))
+async def mentionall(event):
+  chat_id = event.chat_id
+  if event.is_private:
+    return await event.respond("__This command can be use in groups and channels!__")
+  
+  is_admin = False
+  try:
+    partici_ = await client(GetParticipantRequest(
+      event.chat_id,
+      event.sender_id
+    ))
+  except UserNotParticipantError:
+    is_admin = False
+  else:
+    if (
+      isinstance(
+        partici_.participant,
+        (
+          ChannelParticipantAdmin,
+          ChannelParticipantCreator
         )
-        return
-    message.reply_text(
-        "{} accept this, if you want to add yourself into {}'s tag list! or just simply decline this.".format(
-            mention_html(member.user.id, member.user.first_name), chat.title
-        ),
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        text="Accept", callback_data=f"tagall_accept={user_id}"
-                    ),
-                    InlineKeyboardButton(
-                        text="Decline", callback_data=f"tagall_dicline={user_id}"
-                    ),
-                ]
-            ]
-        ),
-        parse_mode=ParseMode.HTML,
-    )
+      )
+    ):
+      is_admin = True
+  if not is_admin:
+    return await event.respond("__Only admins can mention all!__")
+  
+  if event.pattern_match.group(1) and event.is_reply:
+    return await event.respond("__Give me one argument!__")
+  elif event.pattern_match.group(1):
+    mode = "text_on_cmd"
+    msg = event.pattern_match.group(1)
+  elif event.is_reply:
+    mode = "text_on_reply"
+    msg = await event.get_reply_message()
+    if msg == None:
+        return await event.respond("__I can't mention members for older messages! (messages which are sent before I'm added to group)__")
+  else:
+    return await event.respond("__Reply to a message or give me some text to mention others!__")
+  
+  spam_chats.append(chat_id)
+  usrnum = 0
+  usrtxt = ''
+  async for usr in client.iter_participants(chat_id):
+    if not chat_id in spam_chats:
+      break
+    usrnum += 1
+    usrtxt += f"[{usr.first_name}](tg://user?id={usr.id}), "
+    if usrnum == 5:
+      if mode == "text_on_cmd":
+        txt = f"{msg}\n{usrtxt}"
+        await client.send_message(chat_id, txt)
+      elif mode == "text_on_reply":
+        await msg.reply(usrtxt)
+      await asyncio.sleep(2)
+      usrnum = 0
+      usrtxt = ''
+  try:
+    spam_chats.remove(chat_id)
+  except:
+    pass
 
-
-@bot_admin
-@user_admin
-@typing_action
-def removetag(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    args = context.args
-    user_id, reason = extract_user_and_text(message, args)
-    if not user_id:
-        message.reply_text("You don't seem to be referring to a user.")
-        return
-    try:
-        member = chat.get_member(user_id)
-    except BadRequest as excp:
-        if excp.message == "User not found":
-            message.reply_text("I can't seem to find this user")
-            return
-        raise
-    if user_id == context.bot.id:
-        message.reply_text("how I supposed to tag or untag myself")
-        return
-    chat_id = str(chat.id)[1:]
-    tagall_list = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    match_user = mention_html(member.user.id, member.user.first_name)
-    if match_user not in tagall_list:
-        message.reply_text(
-            "{} doesn't exist in {}'s list!".format(
-                mention_html(member.user.id, member.user.first_name), chat.title
-            ),
-            parse_mode=ParseMode.HTML,
+@client.on(events.NewMessage(pattern="^/cancel$"))
+async def cancel_spam(event):
+  if not event.chat_id in spam_chats:
+    return await event.respond("__There is no proccess on going...__")
+  is_admin = False
+  try:
+    partici_ = await client(GetParticipantRequest(
+      event.chat_id,
+      event.sender_id
+    ))
+  except UserNotParticipantError:
+    is_admin = False
+  else:
+    if (
+      isinstance(
+        partici_.participant,
+        (
+          ChannelParticipantAdmin,
+          ChannelParticipantCreator
         )
-        return
-    member = chat.get_member(int(user_id))
-    chat_id = str(chat.id)[1:]
-    REDIS.srem(
-        f"tagall2_{chat_id}", mention_html(member.user.id, member.user.first_name)
-    )
-    message.reply_text(
-        "{} is successfully removed from {}'s list.".format(
-            mention_html(member.user.id, member.user.first_name), chat.title
-        ),
-        parse_mode=ParseMode.HTML,
-    )
-
-
-def tagg_all_button(update, context):
-    query = update.callback_query
-    chat = update.effective_chat
-    splitter = query.data.split("=")
-    query_match = splitter[0]
-    user_id = splitter[1]
-    if query_match == "tagall_accept":
-        if query.from_user.id == int(user_id):
-            member = chat.get_member(int(user_id))
-            chat_id = str(chat.id)[1:]
-            REDIS.sadd(
-                f"tagall2_{chat_id}",
-                mention_html(member.user.id, member.user.first_name),
-            )
-            query.message.edit_text(
-                "{} is accepted! to add yourself {}'s tag list.".format(
-                    mention_html(member.user.id, member.user.first_name), chat.title
-                ),
-                parse_mode=ParseMode.HTML,
-            )
-
-        else:
-            context.bot.answer_callback_query(
-                query.id, text="You're not the user being added in tag list!"
-            )
-    elif query_match == "tagall_dicline":
-        if query.from_user.id == int(user_id):
-            member = chat.get_member(int(user_id))
-            query.message.edit_text(
-                "{} declined! to add yourself {}'s tag list.".format(
-                    mention_html(member.user.id, member.user.first_name), chat.title
-                ),
-                parse_mode=ParseMode.HTML,
-            )
-        else:
-            context.bot.answer_callback_query(
-                query.id, text="You're not the user being added in tag list!"
-            )
-
-
-@typing_action
-def untagme(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    chat_id = str(chat.id)[1:]
-    tagall_list = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    match_user = mention_html(user.id, user.first_name)
-    if match_user not in tagall_list:
-        message.reply_text("You don't exist in {}'s tag list!".format(chat.title))
-        return
-    REDIS.srem(f"tagall2_{chat_id}", mention_html(user.id, user.first_name))
-    message.reply_text(
-        "{} has been removed from {}'s tag list.".format(
-            mention_html(user.id, user.first_name), chat.title
-        ),
-        parse_mode=ParseMode.HTML,
-    )
-
-
-@typing_action
-def tagme(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    chat_id = str(chat.id)[1:]
-    tagall_list = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    match_user = mention_html(user.id, user.first_name)
-    if match_user in tagall_list:
-        message.reply_text("You already exist in {}'s tag list!".format(chat.title))
-        return
-    REDIS.sadd(f"tagall2_{chat_id}", mention_html(user.id, user.first_name))
-    message.reply_text(
-        "{} has been successfully added in {}'s tag list.".format(
-            mention_html(user.id, user.first_name), chat.title
-        ),
-        parse_mode=ParseMode.HTML,
-    )
-
-
-@bot_admin
-@user_admin
-@typing_action
-def tagall(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    args = context.args
-    query = " ".join(args)
-    if not query:
-        message.reply_text("Please give a reason why are you want to tag all!")
-        return
-    chat_id = str(chat.id)[1:]
-    tagall = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    tagall.sort()
-    tagall = ", ".join(tagall)
-
-    if tagall:
-        tagall_reason = query
-        if message.reply_to_message:
-            message.reply_to_message.reply_text(
-                "{}"
-                "\n\n<b>➣ Tagged Reason : </b>"
-                "\n{}".format(tagall, tagall_reason),
-                parse_mode=ParseMode.HTML,
-            )
-        else:
-            message.reply_text(
-                "{}"
-                "\n\n<b>➣ Tagged Reason : </b>"
-                "\n{}".format(tagall, tagall_reason),
-                parse_mode=ParseMode.HTML,
-            )
-    else:
-        message.reply_text("Tagall list is empty!")
-
-
-@bot_admin
-@user_admin
-@typing_action
-def untagall(update, context):
-    chat = update.effective_chat
-    user = update.effective_user
-    message = update.effective_message
-    chat_id = str(chat.id)[1:]
-    tagall_list = list(REDIS.sunion(f"tagall2_{chat_id}"))
-    for tag_user in tagall_list:
-        REDIS.srem(f"tagall2_{chat_id}", tag_user)
-    message.reply_text(
-        "Successully removed all users from {}'s tag list.".format(chat.title)
-    )
-
-
-__mod_name__ = "Tagger"
-
-__help__ = """ 
-Tagger is an essential feature to mention all subscribed members in the group. Any chat members can subscribe to tagger.
-➣ /tagme: registers to the chat tag list.
-➣ /untagme: unsubscribes from the chat tag list.
-
-⚙️ *Admin only:*
-➣ /tagall: mention all subscribed members.
-➣ /untagall: clears all subscribed members. 
-➣ /addtag <userhandle>: add a user to chat tag list. (via handle, or reply)
-➣ /removetag <userhandle>: remove a user to chat tag list. (via handle, or reply)
-"""
-
-TAG_ALL_HANDLER = DisableAbleCommandHandler(
-    "tagall", tagall, filters=Filters.chat_type.groups, run_async=True
-)
-UNTAG_ALL_HANDLER = DisableAbleCommandHandler(
-    "untagall", untagall, filters=Filters.chat_type.groups, run_async=True
-)
-UNTAG_ME_HANDLER = CommandHandler(
-    "untagme", untagme, filters=Filters.chat_type.groups, run_async=True
-)
-TAG_ME_HANDLER = CommandHandler(
-    "tagme", tagme, filters=Filters.chat_type.groups, run_async=True
-)
-ADD_TAG_HANDLER = DisableAbleCommandHandler(
-    "addtag", addtag, pass_args=True, filters=Filters.chat_type.groups, run_async=True
-)
-REMOVE_TAG_HANDLER = DisableAbleCommandHandler(
-    "removetag",
-    removetag,
-    pass_args=True,
-    filters=Filters.chat_type.groups,
-    run_async=True,
-)
-TAGALL_CALLBACK_HANDLER = CallbackQueryHandler(
-    tagg_all_button, pattern=r"tagall_", run_async=True
-)
-
-
-dispatcher.add_handler(TAG_ALL_HANDLER)
-dispatcher.add_handler(UNTAG_ALL_HANDLER)
-dispatcher.add_handler(UNTAG_ME_HANDLER)
-dispatcher.add_handler(TAG_ME_HANDLER)
-dispatcher.add_handler(ADD_TAG_HANDLER)
-dispatcher.add_handler(REMOVE_TAG_HANDLER)
-dispatcher.add_handler(TAGALL_CALLBACK_HANDLER)
+      )
+    ):
+      is_admin = True
+  if not is_admin:
+    return await event.respond("__Only admins can execute this command!__")
+  
+  else:
+    try:
+      spam_chats.remove(event.chat_id)
+    except:
+      pass
+    return await event.respond("__Stopped Mention.__")
