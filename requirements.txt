@@ -3,7 +3,8 @@ emoji
 lxml
 beautifulsoup4
 requests
-SQLAlchemy==1.4.31
+vanitas
+sqlalchemy==1.4.32
 python-telegram-bot==13.11
 psycopg2-binary
 feedparser
@@ -14,17 +15,16 @@ tswift
 nltk
 pyrogram
 psutil
-Pillow
+Pillow>=4.2.0
 CurrencyConverter
 cloudscraper
 jikanpy
-speedtest-cli
 coffeehouse
 regex
 bleach
 git+https://github.com/starry69/python-markdown2.git
 wikipedia
-telethon
+telethon==1.24.0
 spamwatch
 redis
 alphabet_detector
@@ -54,6 +54,7 @@ google-trans-new==1.1.9
 youtube_search
 secureme
 html2text
+humanize
 flag
 bs4
 youtube_search_python
@@ -78,4 +79,5 @@ ffmpeg
 httpx[http2]
 spamwatch
 pynewtonmath
-PyYAML
+PyYAML>5.0
+pendulum
