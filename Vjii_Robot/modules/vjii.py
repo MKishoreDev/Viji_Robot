@@ -1,7 +1,8 @@
 import random
-from Vjii_Robot import pbot as bot
 from pyrogram import filters
 from pyrogram.types import Message
+from Vjii_Robot.modules.helper_funcs.alternate import typing_action
+from Vjii_Robot import pbot as bot
 
 VJII = (
 "If your stuffed animals could talk, what would they say?",
@@ -69,6 +70,7 @@ VJII = (
 "If a friend asks you to keep a secret that you don't feel comfortable keeping, what would you do?",
 )
 
+@typing_action
 @bot.on_message(
     (filters.document
      | filters.text
