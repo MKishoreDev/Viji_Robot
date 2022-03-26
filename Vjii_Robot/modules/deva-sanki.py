@@ -1,93 +1,84 @@
-import asyncio
-import os
-import requests
-import datetime
-import time
-from PIL import Image
-from io import BytesIO
-from datetime import datetime
 import random
-from telethon import events, Button, custom, version
-from Vjii_Robot.events import register
-from Vjii_Robot import telethn as borg
-from Vjii_Robot import StartTime, dispatcher
-from Vjii_Robot.modules.helper_funcs.chat_status import dev_plus
-from telethon.tl.types import ChannelParticipantsAdmins
+from Vjii_Robot import pbot as bot
 
-edit_time = 5
-""" =======================deva====================== """
-file1 = "https://telegra.ph/file/9c6af9e3ff7d8f79401ff.jpg"
-file2 = "https://telegra.ph/file/6dd2657a06adc333a2233.jpg"
-file3 = "https://telegra.ph/file/f66bc2e78216218a807e8.jpg"
-file4 = "https://telegra.ph/file/b95ab1317155821c08385.jpg"
-file5 = "https://telegra.ph/file/1e1b256fa78b2b8496cd9.jpg"
-""" =======================deva====================== """
-
-START_TIME = datetime.utcnow()
-START_TIME_ISO = START_TIME.replace(microsecond=0).isoformat()
-TIME_DURATION_UNITS = (
-    ("week", 60 * 60 * 24 * 7),
-    ("day", 60 * 60 * 24),
-    ("hour", 60 * 60),
-    ("min", 60),
-    ("sec", 1),
+VJII = (
+"If your stuffed animals could talk, what would they say?",
+"What does it feel like when I hug you?",
+"If you drew everything that came to your head, what would you be drawing right now?",
+"What do you think you're going to dream about tonight?",
+"What sounds do you like?",
+"You're outside for a whole day: what would you do?",
+"What makes the best fort?",
+"How do you think animals communicate?",
+"Describe a great day. What are you doing that makes it special?",
+"What animal would make a great driver?",
+"Do you like it when other people share with you? Why?",
+"Who is your favorite storybook character?",
+"What one thing do you do now that you need an adult for but would like to try to do all by yourself?",
+"If you had to give everyone in the family new names, what would they be?",
+"What makes you happy?"
+"If you could do anything right now, what would you do?",
+"If you had a pet dragon, what would you name it?",
+"What would you do together?",
+"Do you ever think about renaming the colors of your crayons?",
+"What character makes you laugh the most?",
+"If you opened a store, what would you sell?",
+"What's your superhero name and what powers do you have?",
+"If you could grow anything in the yard, what would it be?",
+"What do you enjoy giving people?",
+"Did you smile or laugh extra today?",
+"Pretend you're a chef, and tell me about your restaurant. What foods do you serve?",
+"Where would you like to travel? How would you get there?",
+"If you could ask a wild animal any question, what would you ask?",
+"What are some of the best things about nature?",
+"You're a photographer for a day, what would you take pictures of?",
+"What bugs you?",
+"Do you have any inventions in your brain?",
+"Do you think it'd be fun to learn another language?",
+"If you could make up a new holiday, what would it be?",
+"What is the craziest thing you've ever eaten?",
+"Come up with three silly new traditions for the world. Or for aliens on another planet!",
+"What would you do if you made the rules at home?"
+"What makes someone smart?",
+"What do you like daydreaming about?",
+"Tell me something about you that you think I might not know.",
+"What have your friends been up to?",
+"What's a memory that makes you happy?",
+"What do you look forward to when you wake up?",
+"You're at the beach. What's the first thing you do?",
+"What makes you feel brave?",
+"What makes you feel loved?",
+"How do you show people you care?",
+"If you could give $100 to a charity, which would you choose?",
+"How would you design a treehouse?",
+"If you wrote a book, what would it be about?",
+"If you designed clothes, what would they look like?",
+"How do you best like helping others?",
+"What makes you feel thankful?",
+"If you made a cave in the woods, what would be inside it?",
+"What makes you feel energized?",
+"If you were in a play, what would your character be like?",
+"What makes your friends so awesome?",
+"What makes you so awesome?",
+"What are three things you want to do this summer?",
+"If you had friends all over the world, how would you keep in touch?",
+"If you joined the circus, what would your circus act be?",
+"If you were a teacher and could teach your students anything at all, what would you teach them?",
+"If a friend asks you to keep a secret that you don't feel comfortable keeping, what would you do?",
 )
 
-
-async def _human_time_duration(seconds):
-    if seconds == 0:
-        return "inf"
-    parts = []
-    for unit, div in TIME_DURATION_UNITS:
-        amount, seconds = divmod(int(seconds), div)
-        if amount > 0:
-            parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
-    return ", ".join(parts)
-
-
-@borg.on(events.NewMessage(from_users=[5078096037], pattern="^/deva ?(.*)"))
-async def hmm(yes):
-    chat = await yes.get_chat()
-    x = await yes.get_reply_message()
-    name = x.sender.first_name if yes.is_reply else yes.sender.first_name
-    current_time = datetime.utcnow()
-    uptime_sec = (current_time - START_TIME).total_seconds()
-    uptime = await _human_time_duration(int(uptime_sec))
-    omega = "**Try To Reply Your Lover ✨🥀**"
-    love = "https://telegra.ph/file/8e6536dcd782e4710c985.mp4"
-    if not yes.is_reply:
-        await borg.send_file(yes.chat_id, file=love, caption=omega)
-        return
-
-    pm_caption = f"** ♡ I Love You {name}**\n\n"
-    pm_caption += f"**♡ My Heart Is For You ✨🥀**\n\n"
-    pm_caption += f"**♡ Be My GirlFriend 💕**\n\n"
-    pm_caption += f"**♡ Your Boyfriend :** {yes.sender.first_name} 🥺"
-    on = await borg.send_file(yes.chat_id, file=file1, caption=pm_caption)
-
-    await asyncio.sleep(edit_time)
-    ok = await borg.edit_message(yes.chat_id, on, file=file2)
-
-    await asyncio.sleep(edit_time)
-    ok2 = await borg.edit_message(yes.chat_id, ok, file=file3)
-
-    await asyncio.sleep(edit_time)
-    ok3 = await borg.edit_message(yes.chat_id, ok2, file=file4)
-
-    await asyncio.sleep(edit_time)
-    ok4 = await borg.edit_message(yes.chat_id, ok3, file=file5)
-
-    await asyncio.sleep(edit_time)
-    ok5 = await borg.edit_message(yes.chat_id, ok4, file=file1)
-
-    await asyncio.sleep(edit_time)
-    ok6 = await borg.edit_message(yes.chat_id, ok5, file=file2)
-
-    await asyncio.sleep(edit_time)
-    ok7 = await borg.edit_message(yes.chat_id, ok6, file=file3)
-
-    await asyncio.sleep(edit_time)
-    ok8 = await borg.edit_message(yes.chat_id, ok7, file=file4)
-
-    await asyncio.sleep(edit_time)
-    ok9 = await borg.edit_message(yes.chat_id, ok8, file=file5)
+@bot.on_message(
+    (filters.document
+     | filters.text
+     | filters.photo
+     | filters.sticker
+     | filters.animation
+     | filters.video)
+    & ~filters.private,
+    group=8,
+)
+async def vjiiii(_, message): 
+    if message.reply_to_message == 5107947003:
+         await message.reply_text(random.choice(VJII))
+    else:
+         return
