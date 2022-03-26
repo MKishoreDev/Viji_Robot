@@ -1,5 +1,7 @@
 import random
 from Vjii_Robot import pbot as bot
+from pyrogram import filters
+from pyrogram.types import Message
 
 VJII = (
 "If your stuffed animals could talk, what would they say?",
