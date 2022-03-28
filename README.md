@@ -12,4 +12,4 @@
 
 [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
-The Support Group Can Be Reached Out To At [@Vjii_World](https://t.me/Vjii_World), Where You Can Ask For Help About [Vjii Robot ](https://t.me/Vjii_Robot), Discover/Request New Features, Report Bugs, And Stay In The Loop Whenever A New Update Is Available. 
+The Support Group Can Be Reached Out To At [@ClubHousexd](https://t.me/ClubHousexd), Where You Can Ask For Help About [Vjii Robot ](https://t.me/Vjii_Robot), Discover/Request New Features, Report Bugs, And Stay In The Loop Whenever A New Update Is Available. 
